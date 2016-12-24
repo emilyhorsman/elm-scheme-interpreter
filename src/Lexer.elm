@@ -87,8 +87,6 @@ foldOrAbandon foldFunc abandonPredicate accumulator source =
             in
                 if abandonPredicate result then
                     result
-                else if List.isEmpty remaining then
-                    result
                 else
                     foldOrAbandon foldFunc abandonPredicate result remaining
 
