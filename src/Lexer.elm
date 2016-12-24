@@ -74,7 +74,7 @@ accumulateTokens char state =
                     Accumulator tokens (Just (char :: buffer))
 
 
-foldOrAbandon : (Char -> LexerState -> LexerState) -> (LexerState -> Bool) -> LexerState -> List Char -> LexerState
+foldOrAbandon : (a -> b -> b) -> (b -> Bool) -> b -> List a -> b
 foldOrAbandon foldFunc abandonPredicate accumulator source =
     case source of
         [] ->
