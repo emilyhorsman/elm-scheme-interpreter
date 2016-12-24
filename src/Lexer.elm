@@ -65,7 +65,7 @@ accumulateTokens char state =
                     Error "Opening paren before identifier completed."
 
                 ')' ->
-                    Accumulator (getIdentifier buffer :: tokens) Nothing
+                    Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing
 
                 ' ' ->
                     Accumulator (getIdentifier buffer :: tokens) Nothing
