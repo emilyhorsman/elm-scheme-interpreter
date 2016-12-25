@@ -31,8 +31,13 @@ type alias Buffer =
 
 
 type LexerState
-    = Accumulator Tokens Buffer
+    = Accumulator Tokens Buffer TokenState
     | Error String
+
+
+type TokenState
+    = Parsing
+    | InComment
 
 
 getIdentifier : List Char -> Token
@@ -98,40 +103,51 @@ accumulateTokens char state =
         Error msg ->
             state
 
-        Accumulator tokens Nothing ->
+        Accumulator tokens Nothing Parsing ->
             case char of
                 '(' ->
-                    Accumulator (OpenParen :: tokens) Nothing
+                    Accumulator (OpenParen :: tokens) Nothing Parsing
 
                 ')' ->
-                    Accumulator (ClosingParen :: tokens) Nothing
+                    Accumulator (ClosingParen :: tokens) Nothing Parsing
+
+                ';' ->
+                    Accumulator tokens Nothing InComment
 
                 otherwise ->
                     if isInitial char then
-                        Accumulator tokens (Just [ char ])
+                        Accumulator tokens (Just [ char ]) Parsing
                     else if isWhitespace char then
                         state
                     else
                         Error ("Identifier started with invalid character `" ++ String.fromChar char ++ "`")
 
-        Accumulator tokens (Just buffer) ->
+        Accumulator tokens (Just buffer) Parsing ->
             case ( char, buffer ) of
                 ( '(', [ '#' ] ) ->
-                    Accumulator (OpenVectorParen :: tokens) Nothing
+                    Accumulator (OpenVectorParen :: tokens) Nothing Parsing
 
                 ( '(', _ ) ->
                     Error "Opening paren found before identifier completed."
 
                 ( ')', _ ) ->
-                    Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing
+                    Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing Parsing
 
                 otherwise ->
                     if isSubsequent char then
-                        Accumulator tokens (Just (char :: buffer))
+                        Accumulator tokens (Just (char :: buffer)) Parsing
                     else if isWhitespace char then
-                        Accumulator (getIdentifier buffer :: tokens) Nothing
+                        Accumulator (getIdentifier buffer :: tokens) Nothing Parsing
                     else
                         Error ("Identifier continued with invalid subsequent character `" ++ String.fromChar char ++ "`")
+
+        Accumulator tokens buffer InComment ->
+            case char of
+                '\n' ->
+                    Accumulator tokens buffer Parsing
+
+                otherwise ->
+                    Accumulator tokens buffer InComment
 
 
 isError : LexerState -> Bool
@@ -150,11 +166,11 @@ tokenize source =
         result =
             source
                 |> String.toList
-                |> foldOrAbandon accumulateTokens isError (Accumulator [] Nothing)
+                |> foldOrAbandon accumulateTokens isError (Accumulator [] Nothing Parsing)
     in
         case result of
             Error message ->
                 LexerError message
 
-            Accumulator tokens _ ->
+            Accumulator tokens _ _ ->
                 LexerSuccess (List.reverse tokens)

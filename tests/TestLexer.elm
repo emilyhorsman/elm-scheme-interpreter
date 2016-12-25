@@ -65,5 +65,14 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle comments" <|
+                expect
+                    Lexer.tokenize
+                    "; foobar\n()"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]
