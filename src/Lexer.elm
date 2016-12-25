@@ -184,6 +184,8 @@ accumulateTokens char state =
             else
                 Accumulator tokens (Just (char :: buffer :: [])) InCharacter
 
+        -- If we are in a #\character it is either a single character or
+        -- a special case such as #\newline or #\space.
         Accumulator tokens (Just buffer) InCharacter ->
             if isWhitespace char || char == ')' then
                 case checkSpecialChar buffer of
