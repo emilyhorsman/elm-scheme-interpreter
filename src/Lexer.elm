@@ -208,6 +208,9 @@ accumulateTokens char state =
 
         Accumulator tokens buffer InString ->
             case ( char, buffer ) of
+                ( '"', Just ('\\' :: string) ) ->
+                    Accumulator tokens (Just (char :: string)) InString
+
                 ( '"', Just string ) ->
                     Accumulator (Str (string |> List.reverse |> String.fromList) :: tokens) Nothing Parsing
 
