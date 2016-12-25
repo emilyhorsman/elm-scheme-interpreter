@@ -56,7 +56,7 @@ renderTokens model =
     in
         case tokens of
             LexerError message ->
-                text message
+                div [] [ text message ]
 
             LexerSuccess tokens ->
                 ol [] (List.map renderToken tokens)
