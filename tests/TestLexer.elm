@@ -74,5 +74,30 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle boolean true datum" <|
+                expect
+                    Lexer.tokenize
+                    "(define is-allowed #t)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "is-allowed"
+                        , Lexer.Boolean True
+                        , Lexer.ClosingParen
+                        ]
+                    )
+            , test "handle boolean false datum" <|
+                expect
+                    Lexer.tokenize
+                    "(define is-allowed #F)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "is-allowed"
+                        , Lexer.Boolean False
+                        , Lexer.ClosingParen
+                        ]
+                    )
+
             ]
         ]

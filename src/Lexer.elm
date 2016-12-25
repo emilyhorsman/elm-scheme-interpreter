@@ -15,6 +15,7 @@ type Token
     | OpenVectorParen
     | ClosingParen
     | Identifier String
+    | Boolean Bool
 
 
 type alias Tokens =
@@ -38,6 +39,7 @@ type LexerState
 type TokenState
     = Parsing
     | InComment
+    | OpeningVector
 
 
 getIdentifier : List Char -> Token
@@ -114,6 +116,9 @@ accumulateTokens char state =
                 ';' ->
                     Accumulator tokens Nothing InComment
 
+                '#' ->
+                    Accumulator tokens Nothing OpeningVector
+
                 otherwise ->
                     if isInitial char then
                         Accumulator tokens (Just [ char ]) Parsing
@@ -124,9 +129,6 @@ accumulateTokens char state =
 
         Accumulator tokens (Just buffer) Parsing ->
             case ( char, buffer ) of
-                ( '(', [ '#' ] ) ->
-                    Accumulator (OpenVectorParen :: tokens) Nothing Parsing
-
                 ( '(', _ ) ->
                     Error "Opening paren found before identifier completed."
 
@@ -140,6 +142,20 @@ accumulateTokens char state =
                         Accumulator (getIdentifier buffer :: tokens) Nothing Parsing
                     else
                         Error ("Identifier continued with invalid subsequent character `" ++ String.fromChar char ++ "`")
+
+        Accumulator tokens buffer OpeningVector ->
+            case Char.toLower char of
+                '(' ->
+                    Accumulator (OpenVectorParen :: tokens) Nothing Parsing
+
+                't' ->
+                    Accumulator (Boolean True :: tokens) Nothing Parsing
+
+                'f' ->
+                    Accumulator (Boolean False :: tokens) Nothing Parsing
+
+                otherwise ->
+                    Error ("Invalid character followed vector, `" ++ String.fromChar char ++ "`")
 
         Accumulator tokens buffer InComment ->
             case char of
