@@ -122,6 +122,18 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle space character" <|
+                expect
+                    Lexer.tokenize
+                    "(define foobar #\\space)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Character ' '
+                        , Lexer.ClosingParen
+                        ]
+                    )
             , test "error on multi-line vector character" <|
                 isError (Lexer.tokenize "(define foobar #\\newlinee)")
             ]

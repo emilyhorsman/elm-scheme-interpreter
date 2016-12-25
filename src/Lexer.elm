@@ -102,9 +102,9 @@ isWhitespace char =
     char == ' ' || char == '\t' || char == '\n' || char == '\x0D'
 
 
-isNewline : List Char -> Bool
-isNewline chars =
-    (chars |> List.reverse |> List.map Char.toLower) == String.toList "newline"
+isCaseInsensitiveWord : String -> List Char -> Bool
+isCaseInsensitiveWord word buffer =
+    (buffer |> List.reverse |> List.map Char.toLower) == String.toList word
 
 
 accumulateTokens : Char -> LexerState -> LexerState
@@ -180,13 +180,20 @@ accumulateTokens char state =
                 Accumulator tokens (Just (char :: buffer :: [])) InCharacter
 
         Accumulator tokens (Just buffer) InCharacter ->
-            if isNewline buffer then
+            if isCaseInsensitiveWord "newline" buffer then
                 if isWhitespace char then
                     Accumulator (Character '\n' :: tokens) Nothing Parsing
                 else if char == ')' then
                     Accumulator (ClosingParen :: Character '\n' :: tokens) Nothing Parsing
                 else
                     Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\newline`?")
+            else if isCaseInsensitiveWord "space" buffer then
+                if isWhitespace char then
+                    Accumulator (Character ' ' :: tokens) Nothing Parsing
+                else if char == ')' then
+                    Accumulator (ClosingParen :: Character ' ' :: tokens) Nothing Parsing
+                else
+                    Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\space`?")
             else if isWhitespace char || char == ')' then
                 Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`")
             else
