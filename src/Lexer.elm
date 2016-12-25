@@ -20,6 +20,7 @@ type Token
     | Character Char
     | Str String
     | DottedPairMarker
+    | Quote
 
 
 type alias Tokens =
@@ -140,6 +141,9 @@ accumulateTokens char state =
 
                 '.' ->
                     Accumulator (DottedPairMarker :: tokens) Nothing Parsing
+
+                '\'' ->
+                    Accumulator (Quote :: tokens) Nothing Parsing
 
                 otherwise ->
                     if isInitial char then

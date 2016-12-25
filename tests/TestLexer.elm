@@ -209,5 +209,16 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle symbol" <|
+                expect
+                    Lexer.tokenize
+                    "('foo)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Quote
+                        , Lexer.Identifier "foo"
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]
