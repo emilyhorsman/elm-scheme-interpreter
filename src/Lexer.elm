@@ -208,6 +208,7 @@ accumulateTokens char state =
 
         Accumulator tokens buffer InString ->
             case ( char, buffer ) of
+                -- Handle escaped double quotes.
                 ( '"', Just ('\\' :: string) ) ->
                     Accumulator tokens (Just (char :: string)) InString
 
