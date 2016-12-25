@@ -87,6 +87,11 @@ isSubsequent char =
         )
 
 
+isWhitespace : Char -> Bool
+isWhitespace char =
+    char == ' ' || char == '\t' || char == '\n' || char == '\r'
+
+
 accumulateTokens : Char -> LexerState -> LexerState
 accumulateTokens char state =
     case state of
@@ -101,12 +106,11 @@ accumulateTokens char state =
                 ')' ->
                     Accumulator (ClosingParen :: tokens) Nothing
 
-                ' ' ->
-                    state
-
                 otherwise ->
                     if isInitial char then
                         Accumulator tokens (Just [ char ])
+                    else if isWhitespace char then
+                        state
                     else
                         Error ("Identifier started with invalid character `" ++ String.fromChar char ++ "`")
 
@@ -121,12 +125,11 @@ accumulateTokens char state =
                 ( ')', _ ) ->
                     Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing
 
-                ( ' ', _ ) ->
-                    Accumulator (getIdentifier buffer :: tokens) Nothing
-
                 otherwise ->
                     if isSubsequent char then
                         Accumulator tokens (Just (char :: buffer))
+                    else if isWhitespace char then
+                        Accumulator (getIdentifier buffer :: tokens) Nothing
                     else
                         Error ("Identifier continued with invalid subsequent character `" ++ String.fromChar char ++ "`")
 

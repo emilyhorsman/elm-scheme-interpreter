@@ -55,5 +55,15 @@ all =
                 isError (Lexer.tokenize "({foo)")
             , test "error when identifier has an invalid subsequent character" <|
                 isError (Lexer.tokenize "(!!)")
+            , test "handle all whitespace" <|
+                expect
+                    Lexer.tokenize
+                    "(foo \t\r\n)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "foo"
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]
