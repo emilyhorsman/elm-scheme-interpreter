@@ -8,6 +8,7 @@ module Lexer
 
 import Char
 import Utils exposing (foldOrAbandon)
+import Debug exposing (log)
 
 
 type Token
@@ -16,6 +17,7 @@ type Token
     | ClosingParen
     | Identifier String
     | Boolean Bool
+    | Character Char
 
 
 type alias Tokens =
@@ -40,6 +42,7 @@ type TokenState
     = Parsing
     | InComment
     | OpeningVector
+    | InCharacter
 
 
 getIdentifier : List Char -> Token
@@ -96,7 +99,12 @@ isSubsequent char =
 
 isWhitespace : Char -> Bool
 isWhitespace char =
-    char == ' ' || char == '\t' || char == '\n' || char == '\r'
+    char == ' ' || char == '\t' || char == '\n' || char == '\x0D'
+
+
+isNewline : List Char -> Bool
+isNewline chars =
+    (chars |> List.reverse |> List.map Char.toLower) == String.toList "newline"
 
 
 accumulateTokens : Char -> LexerState -> LexerState
@@ -154,8 +162,35 @@ accumulateTokens char state =
                 'f' ->
                     Accumulator (Boolean False :: tokens) Nothing Parsing
 
+                '\\' ->
+                    Accumulator tokens Nothing InCharacter
+
                 otherwise ->
                     Error ("Invalid character followed vector, `" ++ String.fromChar char ++ "`")
+
+        Accumulator tokens Nothing InCharacter ->
+            Accumulator tokens (Just [ char ]) InCharacter
+
+        Accumulator tokens (Just (buffer :: [])) InCharacter ->
+            if isWhitespace char then
+                Accumulator (Character buffer :: tokens) Nothing Parsing
+            else if char == ')' then
+                Accumulator (ClosingParen :: Character buffer :: tokens) Nothing Parsing
+            else
+                Accumulator tokens (Just (char :: buffer :: [])) InCharacter
+
+        Accumulator tokens (Just buffer) InCharacter ->
+            if isNewline buffer then
+                if isWhitespace char then
+                    Accumulator (Character '\n' :: tokens) Nothing Parsing
+                else if char == ')' then
+                    Accumulator (ClosingParen :: Character '\n' :: tokens) Nothing Parsing
+                else
+                    Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\newline`?")
+            else if isWhitespace char || char == ')' then
+                Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`")
+            else
+                Accumulator tokens (Just (char :: buffer)) InCharacter
 
         Accumulator tokens buffer InComment ->
             case char of

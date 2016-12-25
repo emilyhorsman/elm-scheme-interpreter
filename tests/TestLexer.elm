@@ -98,6 +98,31 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
-
+            , test "handle escaped character" <|
+                expect
+                    Lexer.tokenize
+                    "(define foobar #\\ƛ)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Character 'ƛ'
+                        , Lexer.ClosingParen
+                        ]
+                    )
+            , test "handle newline character" <|
+                expect
+                    Lexer.tokenize
+                    "(define foobar #\\newline)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Character '\n'
+                        , Lexer.ClosingParen
+                        ]
+                    )
+            , test "error on multi-line vector character" <|
+                isError (Lexer.tokenize "(define foobar #\\newlinee)")
             ]
         ]
