@@ -42,5 +42,14 @@ all =
                     )
             , test "error when opening paren is immediately after identifier" <|
                 isError "LexerError expected" (Lexer.tokenize "(foobar(")
+            , test "returns open vector paren" <|
+                expect
+                    Lexer.tokenize
+                    "#()"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenVectorParen
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]

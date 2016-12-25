@@ -9,6 +9,7 @@ module Lexer
 
 type Token
     = OpenParen
+    | OpenVectorParen
     | ClosingParen
     | Identifier String
 
@@ -60,14 +61,17 @@ accumulateTokens char state =
                     Accumulator tokens (Just [ char ])
 
         Accumulator tokens (Just buffer) ->
-            case char of
-                '(' ->
+            case ( char, buffer ) of
+                ( '(', [ '#' ] ) ->
+                    Accumulator (OpenVectorParen :: tokens) Nothing
+
+                ( '(', _ ) ->
                     Error "Opening paren found before identifier completed."
 
-                ')' ->
+                ( ')', _ ) ->
                     Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing
 
-                ' ' ->
+                ( ' ', _ ) ->
                     Accumulator (getIdentifier buffer :: tokens) Nothing
 
                 otherwise ->
