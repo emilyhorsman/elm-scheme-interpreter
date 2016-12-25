@@ -212,12 +212,10 @@ all =
             , test "handle symbol" <|
                 expect
                     Lexer.tokenize
-                    "('foo)"
+                    "'foo"
                     (Lexer.LexerSuccess
-                        [ Lexer.OpenParen
-                        , Lexer.Quote
+                        [ Lexer.Quote
                         , Lexer.Identifier "foo"
-                        , Lexer.ClosingParen
                         ]
                     )
             ]

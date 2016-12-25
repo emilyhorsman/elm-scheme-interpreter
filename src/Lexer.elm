@@ -259,6 +259,7 @@ tokenize source =
             source
                 |> String.toList
                 |> foldOrAbandon accumulateTokens isError (Accumulator [] Nothing Parsing)
+                |> accumulateTokens '\n'
     in
         case result of
             Error message ->
