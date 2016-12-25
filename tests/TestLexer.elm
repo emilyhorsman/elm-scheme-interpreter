@@ -182,6 +182,18 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle escaped backslash in string" <|
+                expect
+                    Lexer.tokenize
+                    """(define foobar "\\\\")"""
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Str "\\"
+                        , Lexer.ClosingParen
+                        ]
+                    )
             , test "error on unfinished token" <|
                 isError (Lexer.tokenize "(define \"\"\")")
             , test "handle dotted pair marker" <|

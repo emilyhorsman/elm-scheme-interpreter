@@ -8,6 +8,7 @@ module Lexer
 
 import Char
 import Utils exposing (foldOrAbandon)
+import Debug exposing (log)
 
 
 type Token
@@ -45,6 +46,7 @@ type TokenState
     | OpeningVector
     | InCharacter
     | InString
+    | InStringEscape
 
 
 getIdentifier : List Char -> Token
@@ -212,9 +214,8 @@ accumulateTokens char state =
 
         Accumulator tokens buffer InString ->
             case ( char, buffer ) of
-                -- Handle escaped double quotes.
-                ( '"', Just ('\\' :: string) ) ->
-                    Accumulator tokens (Just (char :: string)) InString
+                ( '\\', _ ) ->
+                    Accumulator tokens buffer InStringEscape
 
                 ( '"', Just string ) ->
                     Accumulator (Str (string |> List.reverse |> String.fromList) :: tokens) Nothing Parsing
@@ -226,6 +227,14 @@ accumulateTokens char state =
                     Accumulator tokens (Just [ char ]) InString
 
                 ( _, Just string ) ->
+                    Accumulator tokens (Just (char :: string)) InString
+
+        Accumulator tokens buffer InStringEscape ->
+            case buffer of
+                Nothing ->
+                    Accumulator tokens (Just [ char ]) InString
+
+                Just string ->
                     Accumulator tokens (Just (char :: string)) InString
 
 
