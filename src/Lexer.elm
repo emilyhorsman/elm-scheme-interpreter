@@ -143,11 +143,11 @@ accumulateTokens char state =
                         Error ("Identifier started with invalid character `" ++ String.fromChar char ++ "`")
 
         Accumulator tokens (Just buffer) Parsing ->
-            case ( char, buffer ) of
-                ( '(', _ ) ->
+            case char of
+                '(' ->
                     Error "Opening paren found before identifier completed."
 
-                ( ')', _ ) ->
+                ')' ->
                     accumulateTokens ')' (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
 
                 otherwise ->
