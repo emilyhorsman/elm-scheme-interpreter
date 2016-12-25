@@ -99,9 +99,19 @@ isWhitespace char =
     char == ' ' || char == '\t' || char == '\n' || char == '\x0D'
 
 
-isCaseInsensitiveWord : String -> List Char -> Bool
-isCaseInsensitiveWord word buffer =
-    (buffer |> List.reverse |> List.map Char.toLower) == String.toList word
+checkSpecialChar : List Char -> Maybe Char
+checkSpecialChar buffer =
+    let
+        input =
+            -- Buffer comes in as a reversed List Char.
+            buffer |> List.reverse |> List.map Char.toLower |> String.fromList
+    in
+        if input == "newline" then
+            Just '\n'
+        else if input == "space" then
+            Just ' '
+        else
+            Nothing
 
 
 accumulateTokens : Char -> LexerState -> LexerState
@@ -175,18 +185,13 @@ accumulateTokens char state =
                 Accumulator tokens (Just (char :: buffer :: [])) InCharacter
 
         Accumulator tokens (Just buffer) InCharacter ->
-            if isCaseInsensitiveWord "newline" buffer then
-                if isWhitespace char || char == ')' then
-                    accumulateTokens char (Accumulator (Character '\n' :: tokens) Nothing Parsing)
-                else
-                    Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\newline`?")
-            else if isCaseInsensitiveWord "space" buffer then
-                if isWhitespace char || char == ')' then
-                    accumulateTokens char (Accumulator (Character ' ' :: tokens) Nothing Parsing)
-                else
-                    Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\space`?")
-            else if isWhitespace char || char == ')' then
-                Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`")
+            if isWhitespace char || char == ')' then
+                case checkSpecialChar buffer of
+                    Nothing ->
+                        Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`")
+
+                    Just special ->
+                        accumulateTokens char (Accumulator (Character special :: tokens) Nothing Parsing)
             else
                 Accumulator tokens (Just (char :: buffer)) InCharacter
 
