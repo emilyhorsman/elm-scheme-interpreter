@@ -17,6 +17,7 @@ type Token
     | Identifier String
     | Boolean Bool
     | Character Char
+    | Str String
 
 
 type alias Tokens =
@@ -42,6 +43,7 @@ type TokenState
     | InComment
     | OpeningVector
     | InCharacter
+    | InString
 
 
 getIdentifier : List Char -> Token
@@ -130,6 +132,9 @@ accumulateTokens char state =
                 '#' ->
                     Accumulator tokens Nothing OpeningVector
 
+                '"' ->
+                    Accumulator tokens Nothing InString
+
                 otherwise ->
                     if isInitial char then
                         Accumulator tokens (Just [ char ]) Parsing
@@ -200,6 +205,20 @@ accumulateTokens char state =
 
                 otherwise ->
                     Accumulator tokens buffer InComment
+
+        Accumulator tokens buffer InString ->
+            case ( char, buffer ) of
+                ( '"', Just string ) ->
+                    Accumulator (Str (string |> List.reverse |> String.fromList) :: tokens) Nothing Parsing
+
+                ( '"', Nothing ) ->
+                    Accumulator (Str "" :: tokens) Nothing Parsing
+
+                ( _, Nothing ) ->
+                    Accumulator tokens (Just [ char ]) InString
+
+                ( _, Just string ) ->
+                    Accumulator tokens (Just (char :: string)) InString
 
 
 isError : LexerState -> Bool

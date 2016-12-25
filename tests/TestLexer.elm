@@ -146,5 +146,29 @@ all =
                     )
             , test "error on multi-line vector character" <|
                 isError (Lexer.tokenize "(define foobar #\\newlinee)")
+            , test "handle strings" <|
+                expect
+                    Lexer.tokenize
+                    "(define foobar \" omg hi!\")"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Str " omg hi!"
+                        , Lexer.ClosingParen
+                        ]
+                    )
+            , test "handle string literals" <|
+                expect
+                    Lexer.tokenize
+                    "(define foobar \"\")"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Str ""
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]
