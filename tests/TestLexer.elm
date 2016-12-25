@@ -68,7 +68,7 @@ all =
             , test "handle all whitespace" <|
                 expect
                     Lexer.tokenize
-                    "(foo \t\r\n)"
+                    "(foo \t\x0D\n)"
                     (Lexer.LexerSuccess
                         [ Lexer.OpenParen
                         , Lexer.Identifier "foo"
@@ -172,17 +172,30 @@ all =
                     )
             , test "handle escaped quote in string" <|
                 expect
-                Lexer.tokenize
-                "(define foobar \"\\\"\")"
-                (Lexer.LexerSuccess
-                    [ Lexer.OpenParen
-                    , Lexer.Identifier "define"
-                    , Lexer.Identifier "foobar"
-                    , Lexer.Str "\""
-                    , Lexer.ClosingParen
-                    ]
-                )
+                    Lexer.tokenize
+                    "(define foobar \"\\\"\")"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "define"
+                        , Lexer.Identifier "foobar"
+                        , Lexer.Str "\""
+                        , Lexer.ClosingParen
+                        ]
+                    )
             , test "error on unfinished token" <|
                 isError (Lexer.tokenize "(define \"\"\")")
+            , test "handle dotted pair marker" <|
+                expect
+                    Lexer.tokenize
+                    "(a b . c)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "a"
+                        , Lexer.Identifier "b"
+                        , Lexer.DottedPairMarker
+                        , Lexer.Identifier "c"
+                        , Lexer.ClosingParen
+                        ]
+                    )
             ]
         ]

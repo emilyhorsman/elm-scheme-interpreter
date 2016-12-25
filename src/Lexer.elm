@@ -18,6 +18,7 @@ type Token
     | Boolean Bool
     | Character Char
     | Str String
+    | DottedPairMarker
 
 
 type alias Tokens =
@@ -134,6 +135,9 @@ accumulateTokens char state =
 
                 '"' ->
                     Accumulator tokens Nothing InString
+
+                '.' ->
+                    Accumulator (DottedPairMarker :: tokens) Nothing Parsing
 
                 otherwise ->
                     if isInitial char then
