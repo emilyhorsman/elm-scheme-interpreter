@@ -243,5 +243,8 @@ tokenize source =
             Error message ->
                 LexerError message
 
-            Accumulator tokens _ _ ->
+            Accumulator tokens Nothing _ ->
                 LexerSuccess (List.reverse tokens)
+
+            Accumulator _ (Just buffer) mode ->
+                LexerError ("Source not complete, unidentified characters in lexer buffer, `" ++ (buffer |> List.reverse |> String.fromList) ++ "` (" ++ (toString mode) ++ ")")
