@@ -62,7 +62,7 @@ accumulateTokens char state =
         Accumulator tokens (Just buffer) ->
             case char of
                 '(' ->
-                    Error "Opening paren before identifier completed."
+                    Error "Opening paren found before identifier completed."
 
                 ')' ->
                     Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing

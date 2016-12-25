@@ -3,6 +3,22 @@ module TestLexer exposing (all)
 import Test exposing (..)
 import TestUtil exposing (expect)
 import Lexer
+import Expect
+
+
+isError : String -> Lexer.LexerResult -> (() -> Expect.Expectation)
+isError message result =
+    \() ->
+        let
+            test =
+                case result of
+                    Lexer.LexerError _ ->
+                        True
+
+                    otherwise ->
+                        False
+        in
+            Expect.true message test
 
 
 all : Test
@@ -24,5 +40,7 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "error when opening paren is immediately after identifier" <|
+                isError "LexerError expected" (Lexer.tokenize "(foobar(")
             ]
         ]
