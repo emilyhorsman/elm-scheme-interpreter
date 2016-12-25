@@ -6,8 +6,8 @@ import Lexer
 import Expect
 
 
-isError : String -> Lexer.LexerResult -> (() -> Expect.Expectation)
-isError message result =
+isError : Lexer.LexerResult -> (() -> Expect.Expectation)
+isError result =
     \() ->
         let
             test =
@@ -18,7 +18,7 @@ isError message result =
                     otherwise ->
                         False
         in
-            Expect.true message test
+            Expect.true ("LexerError expected, got " ++ (toString result)) test
 
 
 all : Test
@@ -41,7 +41,7 @@ all =
                         ]
                     )
             , test "error when opening paren is immediately after identifier" <|
-                isError "LexerError expected" (Lexer.tokenize "(foobar(")
+                isError (Lexer.tokenize "(foobar(")
             , test "returns open vector paren" <|
                 expect
                     Lexer.tokenize
@@ -51,5 +51,7 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "error when identifier starts with invalid character" <|
+                isError (Lexer.tokenize "({foo)")
             ]
         ]

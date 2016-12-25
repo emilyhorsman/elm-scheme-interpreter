@@ -6,6 +6,8 @@ module Lexer
         , Tokens
         )
 
+import Char
+
 
 type Token
     = OpenParen
@@ -40,6 +42,34 @@ getIdentifier buffer =
         |> Identifier
 
 
+isInitial : Char -> Bool
+isInitial char =
+    let
+        initialChars =
+            [ '!'
+            , '$'
+            , '%'
+            , '&'
+            , '*'
+            , '/'
+            , ':'
+            , '<'
+            , '='
+            , '>'
+            , '?'
+            , '~'
+            , '_'
+            , '^'
+              -- This is a special case for OpenVectorParen
+            , '#'
+            ]
+    in
+        (Char.isUpper char
+            || Char.isLower char
+            || List.member char initialChars
+        )
+
+
 accumulateTokens : Char -> LexerState -> LexerState
 accumulateTokens char state =
     case state of
@@ -58,7 +88,10 @@ accumulateTokens char state =
                     state
 
                 otherwise ->
-                    Accumulator tokens (Just [ char ])
+                    if isInitial char then
+                        Accumulator tokens (Just [ char ])
+                    else
+                        Error ("Identifier started with invalid character " ++ String.fromChar char)
 
         Accumulator tokens (Just buffer) ->
             case ( char, buffer ) of
