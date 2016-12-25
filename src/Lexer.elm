@@ -71,6 +71,22 @@ isInitial char =
         )
 
 
+isSubsequent : Char -> Bool
+isSubsequent char =
+    let
+        subsequentChars =
+            [ '.'
+            , '+'
+            , '_'
+            ]
+    in
+        (Char.isUpper char
+            || Char.isLower char
+            || Char.isDigit char
+            || List.member char subsequentChars
+        )
+
+
 accumulateTokens : Char -> LexerState -> LexerState
 accumulateTokens char state =
     case state of
@@ -92,7 +108,7 @@ accumulateTokens char state =
                     if isInitial char then
                         Accumulator tokens (Just [ char ])
                     else
-                        Error ("Identifier started with invalid character " ++ String.fromChar char)
+                        Error ("Identifier started with invalid character `" ++ String.fromChar char ++ "`")
 
         Accumulator tokens (Just buffer) ->
             case ( char, buffer ) of
@@ -109,7 +125,10 @@ accumulateTokens char state =
                     Accumulator (getIdentifier buffer :: tokens) Nothing
 
                 otherwise ->
-                    Accumulator tokens (Just (char :: buffer))
+                    if isSubsequent char then
+                        Accumulator tokens (Just (char :: buffer))
+                    else
+                        Error ("Identifier continued with invalid subsequent character `" ++ String.fromChar char ++ "`")
 
 
 isError : LexerState -> Bool

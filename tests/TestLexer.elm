@@ -53,5 +53,7 @@ all =
                     )
             , test "error when identifier starts with invalid character" <|
                 isError (Lexer.tokenize "({foo)")
+            , test "error when identifier has an invalid subsequent character" <|
+                isError (Lexer.tokenize "(!!)")
             ]
         ]
