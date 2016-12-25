@@ -87,11 +87,7 @@ isSubsequent char =
             , '-'
             ]
     in
-        (Char.isUpper char
-            || Char.isLower char
-            || Char.isDigit char
-            || List.member char subsequentChars
-        )
+        isInitial char || List.member char subsequentChars
 
 
 isWhitespace : Char -> Bool
