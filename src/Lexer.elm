@@ -8,7 +8,6 @@ module Lexer
 
 import Char
 import Utils exposing (foldOrAbandon)
-import Debug exposing (log)
 
 
 type Token
@@ -139,7 +138,7 @@ accumulateTokens char state =
                     Error "Opening paren found before identifier completed."
 
                 ( ')', _ ) ->
-                    Accumulator (ClosingParen :: getIdentifier buffer :: tokens) Nothing Parsing
+                    accumulateTokens ')' (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
 
                 otherwise ->
                     if isSubsequent char then
@@ -170,26 +169,20 @@ accumulateTokens char state =
             Accumulator tokens (Just [ char ]) InCharacter
 
         Accumulator tokens (Just (buffer :: [])) InCharacter ->
-            if isWhitespace char then
-                Accumulator (Character buffer :: tokens) Nothing Parsing
-            else if char == ')' then
-                Accumulator (ClosingParen :: Character buffer :: tokens) Nothing Parsing
+            if isWhitespace char || char == ')' then
+                accumulateTokens char (Accumulator (Character buffer :: tokens) Nothing Parsing)
             else
                 Accumulator tokens (Just (char :: buffer :: [])) InCharacter
 
         Accumulator tokens (Just buffer) InCharacter ->
             if isCaseInsensitiveWord "newline" buffer then
-                if isWhitespace char then
-                    Accumulator (Character '\n' :: tokens) Nothing Parsing
-                else if char == ')' then
-                    Accumulator (ClosingParen :: Character '\n' :: tokens) Nothing Parsing
+                if isWhitespace char || char == ')' then
+                    accumulateTokens char (Accumulator (Character '\n' :: tokens) Nothing Parsing)
                 else
                     Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\newline`?")
             else if isCaseInsensitiveWord "space" buffer then
-                if isWhitespace char then
-                    Accumulator (Character ' ' :: tokens) Nothing Parsing
-                else if char == ')' then
-                    Accumulator (ClosingParen :: Character ' ' :: tokens) Nothing Parsing
+                if isWhitespace char || char == ')' then
+                    accumulateTokens char (Accumulator (Character ' ' :: tokens) Nothing Parsing)
                 else
                     Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`, did you mean `#\\space`?")
             else if isWhitespace char || char == ')' then
