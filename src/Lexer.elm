@@ -71,8 +71,6 @@ isInitial char =
             , '~'
             , '_'
             , '^'
-              -- This is a special case for OpenVectorParen
-            , '#'
             ]
     in
         (Char.isUpper char
