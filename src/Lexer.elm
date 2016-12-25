@@ -82,7 +82,7 @@ isSubsequent char =
         subsequentChars =
             [ '.'
             , '+'
-            , '_'
+            , '-'
             ]
     in
         (Char.isUpper char
