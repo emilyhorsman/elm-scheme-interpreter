@@ -1,6 +1,7 @@
 module Lexer
     exposing
-        ( LexerResult(..)
+        ( Exactness(..)
+        , LexerResult(..)
         , tokenize
         , Token(..)
         , Tokens
@@ -9,6 +10,11 @@ module Lexer
 import Char
 import Utils exposing (foldOrAbandon)
 import Debug exposing (log)
+
+
+type Exactness
+    = Exact Int
+    | Inexact Float
 
 
 type Token
@@ -21,6 +27,7 @@ type Token
     | Str String
     | DottedPairMarker
     | Quote
+    | Number Exactness
 
 
 type alias Tokens =
@@ -48,6 +55,8 @@ type TokenState
     | InCharacter
     | InString
     | InStringEscape
+    | InExactNumber
+    | InInexactNumber
 
 
 getIdentifier : List Char -> Token
@@ -101,6 +110,11 @@ isWhitespace char =
     char == ' ' || char == '\t' || char == '\n' || char == '\x0D'
 
 
+isNumberInitial : Char -> Bool
+isNumberInitial char =
+    Char.isDigit char || char == '+' || char == '-'
+
+
 checkSpecialChar : List Char -> Maybe Char
 checkSpecialChar buffer =
     let
@@ -114,6 +128,56 @@ checkSpecialChar buffer =
             Just ' '
         else
             Nothing
+
+
+{-| String.to{Int,Float} does not accept a String prefixed with
+    a `+` character. This might be better done by keeping some more
+    state in the lexer but this is easy for now.
+-}
+stripPlusSign : List Char -> List Char
+stripPlusSign chars =
+    case chars of
+        '+' :: remaining ->
+            remaining
+
+        otherwise ->
+            otherwise
+
+
+stateFromFloatBuffer : List Char -> Tokens -> LexerState
+stateFromFloatBuffer buffer tokens =
+    let
+        result =
+            buffer
+                |> List.reverse
+                |> stripPlusSign
+                |> String.fromList
+                |> String.toFloat
+    in
+        case result of
+            Ok num ->
+                Accumulator (Number (Inexact num) :: tokens) Nothing Parsing
+
+            Err msg ->
+                Error ("Invalid inexact number, " ++ msg)
+
+
+stateFromIntBuffer : List Char -> Tokens -> LexerState
+stateFromIntBuffer buffer tokens =
+    let
+        result =
+            buffer
+                |> List.reverse
+                |> stripPlusSign
+                |> String.fromList
+                |> String.toInt
+    in
+        case result of
+            Ok num ->
+                Accumulator (Number (Exact num) :: tokens) Nothing Parsing
+
+            Err msg ->
+                Error ("Invalid exact number, " ++ msg)
 
 
 accumulateTokens : Char -> LexerState -> LexerState
@@ -139,8 +203,10 @@ accumulateTokens char state =
                 '"' ->
                     Accumulator tokens Nothing InString
 
+                -- InInexactNumber is our best guess, it could be a
+                -- DottedPairMarker if its the sole character.
                 '.' ->
-                    Accumulator (DottedPairMarker :: tokens) Nothing Parsing
+                    Accumulator tokens (Just [ '.' ]) InInexactNumber
 
                 '\'' ->
                     Accumulator (Quote :: tokens) Nothing Parsing
@@ -150,6 +216,8 @@ accumulateTokens char state =
                         Accumulator tokens (Just [ char ]) Parsing
                     else if isWhitespace char then
                         state
+                    else if isNumberInitial char then
+                        Accumulator tokens (Just [ char ]) InExactNumber
                     else
                         Error ("Identifier started with invalid character `" ++ String.fromChar char ++ "`")
 
@@ -240,6 +308,31 @@ accumulateTokens char state =
 
                 Just string ->
                     Accumulator tokens (Just (char :: string)) InString
+
+        Accumulator tokens (Just buffer) InExactNumber ->
+            case char of
+                '.' ->
+                    Accumulator tokens (Just (char :: buffer)) InInexactNumber
+
+                otherwise ->
+                    if isWhitespace char || char == ')' then
+                        stateFromIntBuffer buffer tokens
+                    else
+                        Accumulator tokens (Just (char :: buffer)) InExactNumber
+
+        Accumulator tokens (Just buffer) InInexactNumber ->
+            if isWhitespace char || char == ')' then
+                -- jk lol this is a dotted pair marker, not an inexact
+                -- number.
+                if buffer == [ '.' ] then
+                    Accumulator (DottedPairMarker :: tokens) Nothing Parsing
+                else
+                    stateFromFloatBuffer buffer tokens
+            else
+                Accumulator tokens (Just (char :: buffer)) InInexactNumber
+
+        Accumulator tokens Nothing state ->
+            Error ("Unexpected state reached with blank buffer, " ++ (toString state))
 
 
 isError : LexerState -> Bool

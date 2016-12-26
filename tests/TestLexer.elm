@@ -218,5 +218,59 @@ all =
                         , Lexer.Identifier "foo"
                         ]
                     )
+            , numbers
             ]
+        ]
+
+numbers : Test
+numbers =
+    describe "numbers"
+        [ test "handle base 10 with empty sign" <|
+            expect
+                Lexer.tokenize
+                "42"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Exact 42)
+                    ]
+                )
+        , test "handle base 10 with negative sign" <|
+            expect
+                Lexer.tokenize
+                "-42"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Exact -42)
+                    ]
+                )
+        , test "handle base 10 with positive sign" <|
+            expect
+                Lexer.tokenize
+                "+42"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Exact 42)
+                    ]
+                )
+        , test "handle base 10 with decimal point" <|
+            expect
+                Lexer.tokenize
+                "1.0"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Inexact 1.0)
+                    ]
+                )
+        , test "handle base 10 with decimal point as initial" <|
+            expect
+                Lexer.tokenize
+                ".5"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Inexact 0.5)
+                    ]
+                )
+        , test "handle base 10 with negative sign and decimal point" <|
+            expect
+                Lexer.tokenize
+                "-.5"
+                (Lexer.LexerSuccess
+                    [ Lexer.Number (Lexer.Inexact -0.5)
+                    ]
+                )
         ]
