@@ -281,4 +281,28 @@ numbers =
                     [ Lexer.Number (Lexer.Inexact -0.5)
                     ]
                 )
+        , test "handle + character not part of number" <|
+            expect
+                Lexer.tokenize
+                "(+ a b)"
+                (Lexer.LexerSuccess
+                    [ Lexer.OpenParen
+                    , Lexer.Identifier "+"
+                    , Lexer.Identifier "a"
+                    , Lexer.Identifier "b"
+                    , Lexer.ClosingParen
+                    ]
+                )
+        , test "handle - character not part of number" <|
+            expect
+                Lexer.tokenize
+                "(- a b)"
+                (Lexer.LexerSuccess
+                    [ Lexer.OpenParen
+                    , Lexer.Identifier "-"
+                    , Lexer.Identifier "a"
+                    , Lexer.Identifier "b"
+                    , Lexer.ClosingParen
+                    ]
+                )
         ]

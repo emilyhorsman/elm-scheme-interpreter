@@ -118,6 +118,19 @@ isNumberInitial char =
     Char.isDigit char || char == '+' || char == '-'
 
 
+isNumberIncomplete : List Char -> Bool
+isNumberIncomplete chars =
+    case chars of
+        '+' :: [] ->
+            True
+
+        '-' :: [] ->
+            True
+
+        otherwise ->
+            False
+
+
 checkSpecialChar : List Char -> Maybe Char
 checkSpecialChar buffer =
     let
@@ -319,7 +332,10 @@ accumulateTokens char state =
 
                 otherwise ->
                     if isWhitespace char || char == ')' then
-                        stateFromIntBuffer buffer tokens
+                        if isNumberIncomplete buffer then
+                            Accumulator (getIdentifier buffer :: tokens) Nothing Parsing
+                        else
+                            stateFromIntBuffer buffer tokens
                     else
                         Accumulator tokens (Just (char :: buffer)) InExactNumber
 
