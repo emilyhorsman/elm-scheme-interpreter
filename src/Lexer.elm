@@ -333,9 +333,9 @@ accumulateTokens char state =
                 otherwise ->
                     if isWhitespace char || char == ')' then
                         if isNumberIncomplete buffer then
-                            Accumulator (getIdentifier buffer :: tokens) Nothing Parsing
+                            accumulateTokens char (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
                         else
-                            stateFromIntBuffer buffer tokens
+                            accumulateTokens char (stateFromIntBuffer buffer tokens)
                     else
                         Accumulator tokens (Just (char :: buffer)) InExactNumber
 
@@ -344,9 +344,9 @@ accumulateTokens char state =
                 -- jk lol this is a dotted pair marker, not an inexact
                 -- number.
                 if buffer == [ '.' ] then
-                    Accumulator (DottedPairMarker :: tokens) Nothing Parsing
+                    accumulateTokens char (Accumulator (DottedPairMarker :: tokens) Nothing Parsing)
                 else
-                    stateFromFloatBuffer buffer tokens
+                    accumulateTokens char (stateFromFloatBuffer buffer tokens)
             else
                 Accumulator tokens (Just (char :: buffer)) InInexactNumber
 

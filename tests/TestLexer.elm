@@ -305,4 +305,42 @@ numbers =
                     , Lexer.ClosingParen
                     ]
                 )
+        , test "handle numbers in list" <|
+            expect
+                Lexer.tokenize
+                "'(1 2 3)"
+                (Lexer.LexerSuccess
+                    [ Lexer.Quote
+                    , Lexer.OpenParen
+                    , Lexer.Number (Lexer.Exact 1)
+                    , Lexer.Number (Lexer.Exact 2)
+                    , Lexer.Number (Lexer.Exact 3)
+                    , Lexer.ClosingParen
+                    ]
+                )
+        , test "handle bare + or - by paren" <|
+            expect
+                Lexer.tokenize
+                "'(+ -)"
+                (Lexer.LexerSuccess
+                    [ Lexer.Quote
+                    , Lexer.OpenParen
+                    , Lexer.Identifier "+"
+                    , Lexer.Identifier "-"
+                    , Lexer.ClosingParen
+                    ]
+                )
+        , test "handle inexact numbers in list" <|
+            expect
+                Lexer.tokenize
+                "'(1.0 2.0 3.0)"
+                (Lexer.LexerSuccess
+                    [ Lexer.Quote
+                    , Lexer.OpenParen
+                    , Lexer.Number (Lexer.Inexact 1.0)
+                    , Lexer.Number (Lexer.Inexact 2.0)
+                    , Lexer.Number (Lexer.Inexact 3.0)
+                    , Lexer.ClosingParen
+                    ]
+                )
         ]
