@@ -102,7 +102,10 @@ isSubsequent char =
             , '-'
             ]
     in
-        isInitial char || List.member char subsequentChars
+        (isInitial char
+            || List.member char subsequentChars
+            || Char.isDigit char
+        )
 
 
 isWhitespace : Char -> Bool

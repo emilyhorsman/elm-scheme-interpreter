@@ -51,6 +51,14 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "returns identifier with a digit subsequent character" <|
+                expect
+                    Lexer.tokenize
+                    "foo1"
+                    (Lexer.LexerSuccess
+                        [ Lexer.Identifier "foo1"
+                        ]
+                    )
             , test "error when identifier starts with invalid character" <|
                 isError (Lexer.tokenize "({foo)")
             , test "error when identifier has an invalid subsequent character" <|
