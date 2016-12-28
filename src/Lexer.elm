@@ -113,6 +113,11 @@ isWhitespace char =
     char == ' ' || char == '\t' || char == '\n' || char == '\x0D'
 
 
+isTerminator : Char -> Bool
+isTerminator char =
+    isWhitespace char || char == ')' || char == ';'
+
+
 isNumberInitial : Char -> Bool
 isNumberInitial char =
     Char.isDigit char || char == '+' || char == '-'
@@ -242,14 +247,11 @@ accumulateTokens char state =
                 '(' ->
                     Error "Opening paren found before identifier completed."
 
-                ')' ->
-                    accumulateTokens ')' (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
-
                 otherwise ->
                     if isSubsequent char then
                         Accumulator tokens (Just (char :: buffer)) Parsing
-                    else if isWhitespace char then
-                        Accumulator (getIdentifier buffer :: tokens) Nothing Parsing
+                    else if isTerminator char then
+                        accumulateTokens char (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
                     else
                         Error ("Identifier continued with invalid subsequent character `" ++ String.fromChar char ++ "`")
 
@@ -274,7 +276,7 @@ accumulateTokens char state =
             Accumulator tokens (Just [ char ]) InCharacter
 
         Accumulator tokens (Just (buffer :: [])) InCharacter ->
-            if isWhitespace char || char == ')' then
+            if isTerminator char then
                 accumulateTokens char (Accumulator (Character buffer :: tokens) Nothing Parsing)
             else
                 Accumulator tokens (Just (char :: buffer :: [])) InCharacter
@@ -282,7 +284,7 @@ accumulateTokens char state =
         -- If we are in a #\character it is either a single character or
         -- a special case such as #\newline or #\space.
         Accumulator tokens (Just buffer) InCharacter ->
-            if isWhitespace char || char == ')' then
+            if isTerminator char then
                 case checkSpecialChar buffer of
                     Nothing ->
                         Error ("Multi-character character found, `" ++ (buffer |> List.reverse |> String.fromList) ++ "`")
@@ -331,7 +333,7 @@ accumulateTokens char state =
                     Accumulator tokens (Just (char :: buffer)) InInexactNumber
 
                 otherwise ->
-                    if isWhitespace char || char == ')' then
+                    if isTerminator char then
                         if isNumberIncomplete buffer then
                             accumulateTokens char (Accumulator (getIdentifier buffer :: tokens) Nothing Parsing)
                         else
@@ -340,7 +342,7 @@ accumulateTokens char state =
                         Accumulator tokens (Just (char :: buffer)) InExactNumber
 
         Accumulator tokens (Just buffer) InInexactNumber ->
-            if isWhitespace char || char == ')' then
+            if isTerminator char then
                 -- jk lol this is a dotted pair marker, not an inexact
                 -- number.
                 if buffer == [ '.' ] then

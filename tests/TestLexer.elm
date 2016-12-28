@@ -92,6 +92,16 @@ all =
                         , Lexer.ClosingParen
                         ]
                     )
+            , test "handle comments in identifier" <|
+                expect
+                    Lexer.tokenize
+                    "(abc;def)\n)"
+                    (Lexer.LexerSuccess
+                        [ Lexer.OpenParen
+                        , Lexer.Identifier "abc"
+                        , Lexer.ClosingParen
+                        ]
+                    )
             , test "handle boolean true datum" <|
                 expect
                     Lexer.tokenize
@@ -229,6 +239,7 @@ all =
             , numbers
             ]
         ]
+
 
 numbers : Test
 numbers =
